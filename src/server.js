@@ -20,18 +20,29 @@ const parseBody = (request, response, handler) => {
 
   request.on('end', () => {
     const bodyString = Buffer.concat(body).toString();
-    // console.log(bodyString);
-    request.body = query.parse(bodyString);
-    // console.log(request.body);
+
+
+
+    if (request.headers['content-type'] === 'application/x-www-form-urlencoded') {
+      request.body = query.parse(bodyString);
+    } else if (request.headers['content-type'] === 'application/json') {
+      request.body = JSON.parse(bodyString);
+    }
+    else {
+      response.status = 400;
+      response.end();
+      return;
+    }
+
+
+
     handler(request, response);
   });
 }
 
 const handlePost = (request, response, parsedUrl) => {
-
   if (parsedUrl.pathname === '/addUser') {
     parseBody(request, response, jsonHandler.addUser);
-    //jsonHandler.addUser(request, response);
   }
 };
 

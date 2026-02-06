@@ -6,7 +6,7 @@
   <link rel="stylesheet" type="text/css" href="/style.css">
 
   <script>
-    const handleResponse = (response) => {
+    const handleResponse = async (response) => {
       const content = document.querySelector('#content');
 
       switch (response.status) {
@@ -27,6 +27,12 @@
           break;
       }
 
+      const obj = await response.json();
+      if (obj.message) {
+        content.innerHTML += `<p>${obj.message}</p>`;
+      }
+
+
     };
 
     const sendPost = async (nameForm) => {
@@ -35,19 +41,27 @@
 
       const name = nameForm.querySelector('#nameField').value;
       const age = nameForm.querySelector('#ageField').value;
+      const dataType = nameForm.querySelector('#dataType').value;
 
-      const formData = `name=${name}&age=${age}`;
+      let formData
+      if (dataType === 'application/x-www-form-urlencoded') {
+        formData = `name=${name}&age=${age}`;
+      } else if (dataType === 'application/json') {
+        formData = JSON.stringify({ name, age });
+      }
+
 
       const response = await fetch(nameAction, {
         method: nameMethod,
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': dataType,
           'Content-Length': formData.length,
           'Accept': 'application/json'
         },
         body: formData,
       });
 
+      handleResponse(response);
 
     };
 
@@ -76,6 +90,10 @@
       <input id="nameField" type="text" name="name" />
       <label for="age">Age: </label>
       <input id="ageField" type="number" name="age" min="0" max="100" step="1" />
+      <select name="dataType" id="dataType">
+        <option value="application/x-www-form-urlencoded">URL Encoded</option>
+        <option value="application/json">JSON</option>
+      </select>
       <input type="submit" value="Add User" />
     </form>
     <p>Go to <a href="/getUsers">/getUsers</a> to see users.</p>
